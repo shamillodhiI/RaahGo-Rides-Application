@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RaahGo — Apni Manzil, Apni Marzi</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%2312805C'/%3E%3Ctext x='12' y='17' font-size='14' text-anchor='middle' fill='white' font-family='sans-serif'%3ER%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" onerror="this.remove()">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" onerror="this.remove()" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onerror="window.__leafletFailed=true;"></script>
+<style>
+:root{
+  --bg:#F6F7F5;
+  --surface:#FFFFFF;
+  --surface-2:#F0F2EF;
+  --text:#151B15;
+  --text-muted:#6B7570;
+  --border:#E4E7E2;
+  --primary:#12805C;
+  --primary-dark:#0B5C41;
+  --primary-tint:#E4F3EC;
+  --accent:#E08A2C;
+  --accent-tint:#FBEBD8;
+  --danger:#D14B4B;
+  --danger-tint:#FBE6E6;
+  --shadow: 0 2px 10px rgba(15,25,20,0.06);
+  --radius: 16px;
+  --nav-h: 66px;
+  --topbar-h: 58px;
+}
+html.dark{
+  --bg:#0E1310;
+  --surface:#161C18;
+  --surface-2:#1E2621;
+  --text:#EDF1EC;
+  --text-muted:#8B968F;
+  --border:#28322C;
+  --primary:#22B37F;
+  --primary-dark:#0F7F58;
+  --primary-tint:#122A21;
+  --accent:#E9A559;
+  --accent-tint:#2B2116;
+  --danger:#E06767;
+  --danger-tint:#2C1717;
+  --shadow: 0 2px 14px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); transition:background .25s,color .25s;}
+h1,h2,h3,.display{font-family:'Sora',sans-serif;}
+#root{max-width:480px; margin:0 auto; min-height:100vh; background:var(--bg); position:relative; box-shadow:0 0 40px rgba(0,0,0,0.06); overflow-x:hidden;}
+@media(min-width:481px){ body{background:var(--surface-2);} }
+.screen{padding-bottom:calc(var(--nav-h) + 14px); min-height:100vh; animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+.topbar{display:flex; align-items:center; gap:12px; padding:14px 18px; height:var(--topbar-h); position:sticky; top:0; background:var(--bg); z-index:20; border-bottom:1px solid transparent;}
+.topbar.solid{background:var(--surface); border-bottom:1px solid var(--border);}
+.icon-btn{width:38px; height:38px; border-radius:12px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; color:var(--text);}
+.icon-btn:active{transform:scale(.94);}
+.topbar-title{font-weight:700; font-size:17px; flex:1;}
+.container{padding:0 18px;}
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);}
+.btn{border:none; border-radius:14px; padding:14px 18px; font-weight:700; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Inter',sans-serif; width:100%;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--primary); color:#fff;}
+.btn-outline{background:transparent; color:var(--primary); border:1.5px solid var(--primary);}
+.btn-ghost{background:var(--surface-2); color:var(--text);}
+.btn-danger{background:var(--danger); color:#fff;}
+.btn-sm{padding:9px 14px; font-size:13px; border-radius:10px; width:auto;}
+input, select, textarea{width:100%; padding:13px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); color:var(--text); font-size:14.5px; font-family:'Inter',sans-serif; outline:none;}
+input:focus, select:focus, textarea:focus{border-color:var(--primary);}
+label{font-size:12.5px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;}
+.field{margin-bottom:14px;}
+.muted{color:var(--text-muted);}
+.row{display:flex; align-items:center;}
+.row-between{display:flex; align-items:center; justify-content:space-between;}
+.chip{padding:7px 13px; border-radius:20px; font-size:12.5px; font-weight:700; background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border); cursor:pointer;}
+.chip.active{background:var(--primary); color:#fff; border-color:var(--primary);}
+.badge{padding:3px 9px; border-radius:8px; font-size:11px; font-weight:700;}
+.badge-green{background:var(--primary-tint); color:var(--primary);}
+.badge-amber{background:var(--accent-tint); color:var(--accent);}
+.badge-red{background:var(--danger-tint); color:var(--danger);}
+.divider{height:1px; background:var(--border); margin:14px 0;}
+.avatar{border-radius:50%; object-fit:cover; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--primary); overflow:hidden;}
+.section-title{font-weight:800; font-size:19px; margin:4px 0 14px; font-family:'Sora',sans-serif;}
+.list-item{display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid var(--border); cursor:pointer;}
+.list-item:last-child{border-bottom:none;}
+.list-item:active{opacity:.7;}
+.bottom-nav{position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; height:var(--nav-h); background:var(--surface); border-top:1px solid var(--border); display:flex; z-index:30;}
+.nav-item{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:10.5px; font-weight:700; color:var(--text-muted); cursor:pointer; gap:4px;}
+.nav-item.active{color:var(--primary);}
+.nav-item svg{width:22px; height:22px;}
+.fab{position:fixed; bottom:calc(var(--nav-h) + 16px); left:50%; transform:translateX(calc(-50% + 190px)); background:var(--danger); color:#fff; width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,0.25); z-index:25; cursor:pointer;}
+.map-box{height:220px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); position:relative;}
+.modal-overlay{position:fixed; inset:0; background:rgba(10,15,12,0.5); z-index:100; display:flex; align-items:flex-end; justify-content:center;}
+.modal-sheet{background:var(--surface); width:100%; max-width:480px; border-radius:20px 20px 0 0; padding:22px 18px 28px; animation:slideUp .25s ease; max-height:85vh; overflow-y:auto;}
+@keyframes slideUp{from{transform:translateY(40px); opacity:0} to{transform:none; opacity:1}}
+.toggle{width:46px; height:26px; border-radius:20px; background:var(--border); position:relative; cursor:pointer; flex-shrink:0; transition:background .2s;}
+.toggle.on{background:var(--primary);}
+.toggle-dot{width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:3px; left:3px; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.toggle.on .toggle-dot{left:23px;}
+.veh-card{border:1.5px solid var(--border); border-radius:14px; padding:12px; text-align:center; cursor:pointer; background:var(--surface);}
+.veh-card.selected{border-color:var(--primary); background:var(--primary-tint);}
+.stat-box{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; text-align:center;}
+.stat-num{font-size:22px; font-weight:800; font-family:'Sora',sans-serif; color:var(--primary);}
+.pulse{width:14px; height:14px; border-radius:50%; background:var(--primary); position:relative;}
+.pulse::after{content:'';position:absolute; inset:-6px; border-radius:50%; border:2px solid var(--primary); animation:pulse 1.5s infinite;}
+@keyframes pulse{0%{transform:scale(.6); opacity:1} 100%{transform:scale(1.8); opacity:0}}
+.star{cursor:pointer; font-size:30px; color:var(--border);}
+.star.filled{color:var(--accent);}
+.toast{position:fixed; bottom:calc(var(--nav-h) + 20px); left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:11px 20px; border-radius:30px; font-size:13.5px; font-weight:600; z-index:200; box-shadow:0 4px 14px rgba(0,0,0,0.25); animation:fadeIn .2s;}
+::-webkit-scrollbar{width:0; height:0;}
+a{color:inherit;}
+.link{color:var(--primary); font-weight:700; cursor:pointer;}
+.progress-track{height:6px; background:var(--surface-2); border-radius:6px; overflow:hidden;}
+.progress-fill{height:100%; background:var(--primary); border-radius:6px; transition:width .3s;}
+.center-col{display:flex; flex-direction:column; align-items:center; text-align:center;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<noscript><div style="padding:40px; text-align:center; font-family:sans-serif;">RaahGo chalaane ke liye apne browser mein JavaScript on karein.</div></noscript>
+<script>
+window.addEventListener('error', function(e){
+  var root = document.getElementById('root');
+  if(root && root.innerHTML.trim()===''){
+    root.innerHTML = '<div style="padding:40px 24px; text-align:center; font-family:sans-serif;">'
+      + '<h2 style="color:#D14B4B;">RaahGo load nahi ho saka</h2>'
+      + '<p style="color:#6B7570; font-size:14px;">Internet connection check karein aur page refresh karein.</p>'
+      + '<button onclick="location.reload()" style="margin-top:16px; padding:12px 20px; border:none; border-radius:10px; background:#12805C; color:#fff; font-weight:700; cursor:pointer;">Dobara Try Karein</button>'
+      + '</div>';
+  }
+});
+</script>
+<script>
+/* ---------------- STATE ---------------- */
+const State = {
+  theme: 'light',
+  authed: false,
+  mode: 'passenger', // passenger | driver
+  screen: 'splash',
+  prevScreen: 'home',
+  settingsSub: null,
+  user: { name:'Ahmad Raza', phone:'+92 300 1234567', email:'ahmad.raza@example.com', rating:4.86, photo:null, referral:'RAAHGO-AR294' },
+  driver: { registered:false, vehicleType:null, vehiclePlate:'', online:false, docsSubmitted:false },
+  wallet: { balance: 2450, txns: [
+    {id:1, type:'topup', amount:1000, note:'Easypaisa se top-up', date:'28 Aug'},
+    {id:2, type:'ride', amount:-320, note:'Ride: Gulgasht → Cantt', date:'29 Aug'},
+    {id:3, type:'ride', amount:-180, note:'Ride: Bosan Road → Chowk', date:'30 Aug'},
+    {id:4, type:'refund', amount:150, note:'Cancelled ride refund', date:'31 Aug'},
+  ]},
+  notifications: [
+    {id:1, title:'Ride Complete Hogi', body:'Aapki ride Cantt tak mukammal ho gayi. Rate karain apne driver ko.', time:'2 ghantay pehlay', unread:true},
+    {id:2, title:'Wallet Top-up Kamyab', body:'Rs. 1000 aapke wallet mein add ho gaye.', time:'1 din pehlay', unread:true},
+    {id:3, title:'Naya Discount', body:'City to City rides par 15% off — is weekend.', time:'2 din pehlay', unread:false},
+    {id:4, title:'Safety Tip', body:'Har ride se pehle driver ki gaari number plate zaroor check karein.', time:'3 din pehlay', unread:false},
+  ],
+  rideHistory: [
+    {id:1, from:'Gulgasht Colony', to:'Cantt Multan', fare:320, date:'29 Aug', status:'Mukammal', rating:5, driver:'Bilal Ahmed'},
+    {id:2, from:'Bosan Road', to:'Chowk Kumharanwala', fare:180, date:'30 Aug', status:'Mukammal', rating:4, driver:'Zeeshan Khan'},
+    {id:3, from:'Nishtar Hospital', to:'Vehari Chowk', fare:260, date:'25 Aug', status:'Cancel', rating:null, driver:null},
+  ],
+  settings: { tariffAuto:true, rideRequestRadius:5, navApp:'Maps App (default)', mapAccess:true, notifPush:true, notifSms:false },
+  booking: { step:'set-pickup', pickup:'Aapki Location (GPS)', drop:'', vehicle:null, offerFare:'', matchedDriver:null, },
+  cityTrip: { from:'', to:'', date:'', seats:1 },
+  freight: { from:'', to:'', item:'', vehicle:null },
+  driverStats: { today:1250, month:38600, totalRides:412, acceptance:92, cancelRate:3, badges:['5-Star Champion','100+ Rides','Zero Cancellations Week'] },
+  loans: [
+    {id:1, title:'Vehicle Maintenance Loan', amount:'Rs. 20,000 tak', term:'6 mahiny', rate:'0% markup (promo)'},
+    {id:2, title:'Fuel Advance', amount:'Rs. 5,000 tak', term:'30 din', rate:'Low markup'},
+    {id:3, title:'New Bike Loan', amount:'Rs. 150,000 tak', term:'24 mahiny', rate:'Installment based'},
+  ],
+  map: null,
+};
+
+function toast(msg){
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 2200);
+}
+function go(screen){ State.prevScreen = State.screen; State.screen = screen; render(); window.scrollTo(0,0); }
+function back(){ go(State.prevScreen && State.prevScreen!==State.screen ? State.prevScreen : 'home'); }
+function setMode(m){ State.mode = m; go('home'); }
+function toggleTheme(){ State.theme = State.theme==='light'?'dark':'light'; document.documentElement.classList.toggle('dark', State.theme==='dark'); render(); }
+
+/* ---------------- ICONS (inline svg, stroke style) ---------------- */
+const Icon = {
+  home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>`,
+  activity:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>`,
+  wallet:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16" cy="14.5" r="1"/></svg>`,
+  bell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 004 0"/></svg>`,
+  user:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>`,
+  back:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
+  menu:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`,
+  sun:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
+  moon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>`,
+  car:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 11-4 0 2 2 0 014 0zm14 0a2 2 0 11-4 0 2 2 0 014 0zM3 17V11l2-5h14l2 5v6"/></svg>`,
+  bike:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M12 17.5V10l-3-4h6l4 7.5h-7"/></svg>`,
+  rickshaw:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M2 18h2M8 18h9M11 18V8h6l2 6M6 8h4"/></svg>`,
+  shield:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>`,
+  settings:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 01-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.55-1H3a2 2 0 010-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-1.55V3a2 2 0 014 0v.09A1.7 1.7 0 0015 4.6a1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9c.14.36.4.66 1.55 1H21a2 2 0 010 4h-.09a1.7 1.7 0 00-1.51 1z"/></svg>`,
+  chevron:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`,
+  location:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  truck:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/></svg>`,
+  cash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>`,
+  help:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3.5M12 17h.01"/></svg>`,
+  gift:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 12h18M12 8c-2 0-3-1-3-2.5S10 3 12 5c0-2 1.5-3 3-2.5S17 5 15 6c1 0 2 1 2 2"/></svg>`,
+  camera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="14" r="3.5"/></svg>`,
+  star:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7.5.6-5.7 5 1.7 7.4L12 18l-6.5 4 1.7-7.4-5.7-5L9 9z"/></svg>`,
+  sos:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>`,
+  power:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10M18.4 6.6a9 9 0 11-12.8 0"/></svg>`,
+  trophy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3"/></svg>`,
+  logout:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>`,
+};
+function ic(name, size=20){ return `<span style="width:${size}px;height:${size}px;display:inline-flex" >${Icon[name]}</span>`; }
+
+/* ---------------- TOP BAR ---------------- */
+function TopBar({title, showBack=false, right=''}){
+  return `<div class="topbar solid">
+    ${showBack?`<div class="icon-btn" onclick="back()">${ic('back')}</div>`:''}
+    <div class="topbar-title">${title}</div>
+    ${right}
+  </div>`;
+}
+
+/* ---------------- BOTTOM NAV ---------------- */
+function BottomNav(){
+  const items = State.mode==='passenger' ? [
+    {s:'home', i:'home', l:'Home'},
+    {s:'activity', i:'activity', l:'Rides'},
+    {s:'wallet', i:'wallet', l:'Wallet'},
+    {s:'notifications', i:'bell', l:'Alerts'},
+    {s:'profile', i:'user', l:'Profile'},
+  ] : [
+    {s:'home', i:'home', l:'Home'},
+    {s:'performance', i:'activity', l:'Kaarkardagi'},
+    {s:'wallet', i:'wallet', l:'Wallet'},
+    {s:'notifications', i:'bell', l:'Alerts'},
+    {s:'profile', i:'user', l:'Profile'},
+  ];
+  return `<div class="bottom-nav">
+    ${items.map(it=>`<div class="nav-item ${State.screen===it.s?'active':''}" onclick="go('${it.s}')">
+      ${ic(it.i,22)}<span>${it.l}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+/* ---------------- SPLASH / AUTH ---------------- */
+function screenSplash(){
+  return `<div class="screen center-col" style="justify-content:center; min-height:100vh; background:linear-gradient(160deg, var(--primary-dark), var(--primary)); color:#fff; padding:40px 24px;">
+    <div style="width:84px;height:84px;border-radius:24px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:22px;">
+      ${ic('location',44)}
+    </div>
+    <h1 class="display" style="font-size:32px; margin:0 0 6px;">RaahGo</h1>
+    <p style="opacity:.85; margin:0 0 40px; font-size:14.5px;">Apni Manzil, Apni Marzi ka Kiraya</p>
+    <div style="width:100%; max-width:320px;">
+      <button class="btn" style="background:#fff; color:var(--primary-dark); margin-bottom:12px;" onclick="go('login')">Login Karein</button>
+      <button class="btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1.5px solid rgba(255,255,255,0.4);" onclick="go('signup')">Naya Account Banayein</button>
+    </div>
+  </div>`;
+}
+
+function screenLogin(){
+  return `<div class="screen">
+    ${TopBar({title:'Login', showBack:true})}
+    <div class="container" style="padding-top:10px;">
+      <p class="muted" style="margin-bottom:22px;">Apna phone number darj karein, hum aapko OTP bhejein gay.</p>
+      <div class="field"><label>Phone Number</label><input id="loginPhone" type="tel" placeholder="+92 3XX XXXXXXX" value="+92 300 1234567"></div>
+      <button class="btn btn-primary" onclick="go('otp')">Code Bhejein</button>
+      <div class="divider"></div>
+      <p style="text-align:center; font-size:13.5px;">Account nahi hai? <span class="link" onclick="go('signup')">Sign Up karein</span></p>
+    </div>
+  </div>`;
+}
+function screenSignup(){
+  return `<div class="screen">
+    ${TopBar({title:'Naya Account', showBack:true})}
+    <div class="container" style="padding-top:10px;">
+      <div class="field"><label>Poora Naam</label><input placeholder="Apna naam likhein" value="${State.user.name}"></div>
+      <div class="field"><label>Phone Number</label><input type="tel" placeholder="+92 3XX XXXXXXX"></div>
+      <div class="field"><label>Email (optional)</label><input type="email" placeholder="aap@example.com"></div>
+      <button class="btn btn-primary" onclick="go('otp')">Account Banayein</button>
+      <p style="text-align:center; font-size:12px; margin-top:14px;" class="muted">Continue karke aap RaahGo ki Shartain-o-Zawabit se ittefaq karte hain.</p>
+    </div>
+  </div>`;
+}
+function screenOTP(){
+  return `<div class="screen">
+    ${TopBar({title:'Tasdeeqi Code', showBack:true})}
+    <div class="container center-col" style="padding-top:20px;">
+      <p class="muted" style="margin-bottom:20px;">Code bheja gaya +92 300 1234567 par</p>
+      <div class="row" style="gap:10px; margin-bottom:24px;">
+        ${[1,2,3,4].map(()=>`<input maxlength="1" style="width:52px; height:56px; text-align:center; font-size:22px; font-weight:700;" value="•">`).join('')}
+      </div>
+      <button class="btn btn-primary" onclick="State.authed=true; go('roleSelect')">Tasdeeq Karein</button>
+      <p style="margin-top:16px; font-size:13px;">Code nahi mila? <span class="link" onclick="toast('Code dobara bheja gaya')">Dobara bhejein</span></p>
+    </div>
+  </div>`;
+}
+function screenRoleSelect(){
+  return `<div class="screen center-col" style="justify-content:center; min-height:100vh; padding:24px;">
+    <h2 class="section-title">Aap kis tarah use karna chahtay hain?</h2>
+    <div style="width:100%; display:flex; flex-direction:column; gap:14px; max-width:340px;">
+      <div class="card" style="cursor:pointer;" onclick="setMode('passenger')">
+        <div class="row" style="gap:14px;">
+          <div style="width:50px;height:50px;border-radius:14px;background:var(--primary-tint);display:flex;align-items:center;justify-content:center; color:var(--primary);">${ic('user',26)}</div>
+          <div><b>Passenger</b><p class="muted" style="margin:2px 0 0; font-size:13px;">Ride book karein, kaheen bhi jaayein</p></div>
+        </div>
+      </div>
+      <div class="card" style="cursor:pointer;" onclick="setMode('driver')">
+        <div class="row" style="gap:14px;">
+          <div style="width:50px;height:50px;border-radius:14px;background:var(--accent-tint);display:flex;align-items:center;justify-content:center; color:var(--accent);">${ic('car',26)}</div>
+          <div><b>Driver</b><p class="muted" style="margin:2px 0 0; font-size:13px;">Gaari chalayein, paisay kamayein</p></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- MAP HELPER ---------------- */
+let leafletInstances = {};
+let leafletLoadFailed = (typeof window.__leafletFailed !== 'undefined' && window.__leafletFailed) || typeof L === 'undefined';
+function mapFallbackHTML(){
+  return `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface-2);color:var(--text-muted);gap:6px;">
+    ${ic('location',28)}<span style="font-size:12px;">Map load nahi ho saka (internet check karein)</span>
+  </div>`;
+}
+function initMap(elId, lat=30.1575, lng=71.5249, zoom=13){
+  setTimeout(()=>{
+    try{
+      const el = document.getElementById(elId);
+      if(!el || el._leaflet_id) return;
+      if(leafletLoadFailed || typeof L === 'undefined'){
+        el.innerHTML = mapFallbackHTML();
+        return;
+      }
+      const map = L.map(elId, {zoomControl:false, attributionControl:false}).setView([lat,lng], zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      L.marker([lat,lng]).addTo(map);
+      leafletInstances[elId] = map;
+    }catch(e){
+      console.warn('Map init failed, showing fallback:', e);
+      const el = document.getElementById(elId);
+      if(el) el.innerHTML = mapFallbackHTML();
+    }
+  }, 60);
+}
+
+/* ---------------- PASSENGER HOME ---------------- */
+function screenHome(){
+  if(State.mode==='passenger') return passengerHome();
+  return driverHome();
+}
+function passengerHome(){
+  const html = `<div class="screen">
+    <div class="topbar">
+      <div class="icon-btn" onclick="go('settings')">${ic('menu')}</div>
+      <div class="topbar-title">Assalam-o-Alaikum, ${State.user.name.split(' ')[0]}</div>
+      <div class="icon-btn" onclick="setMode('driver')" title="Driver Mode">${ic('car')}</div>
+    </div>
+    <div class="container">
+      <div class="map-box" id="mapHome"></div>
+      <div class="card" style="margin-top:-28px; position:relative; z-index:5;">
+        <div class="row" style="gap:10px; cursor:pointer;" onclick="go('bookRide')">
+          <div style="color:var(--primary);">${ic('location')}</div>
+          <input readonly placeholder="Kahan jaana hai?" style="border:none; background:var(--surface-2); cursor:pointer;">
+        </div>
+      </div>
+      <div class="row" style="gap:12px; margin:18px 0; overflow-x:auto;">
+        ${quickTile('car','Ride', "go('bookRide')")}
+        ${quickTile('truck','City to City', "go('cityToCity')")}
+        ${quickTile('truck','Freight', "go('freight')")}
+        ${quickTile('wallet','Wallet', "go('wallet')")}
+      </div>
+      <div class="section-title" style="font-size:16px;">Aakhri Rides</div>
+      ${State.rideHistory.slice(0,2).map(r=>rideHistoryItem(r)).join('')}
+      <div style="text-align:center; margin-top:8px;"><span class="link" onclick="go('activity')">Sab dekhein</span></div>
+    </div>
+  </div>`;
+  return html;
+}
+function quickTile(icon,label,onclick){
+  return `<div onclick="${onclick}" style="min-width:78px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;">
+    <div style="width:56px;height:56px;border-radius:16px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center; color:var(--primary);">${ic(icon,24)}</div>
+    <span style="font-size:11.5px; font-weight:600; text-align:center;">${label}</span>
+  </div>`;
+}
+function rideHistoryItem(r){
+  return `<div class="list-item" onclick="toast('Ride tafseelat: ${r.from} → ${r.to}')">
+    <div style="width:38px;height:38px;border-radius:10px;background:var(--surface-2); display:flex; align-items:center; justify-content:center; color:var(--primary);">${ic('car',18)}</div>
+    <div style="flex:1;">
+      <div style="font-weight:700; font-size:14px;">${r.from} → ${r.to}</div>
+      <div class="muted" style="font-size:12px;">${r.date} • ${r.status}${r.rating?` • ${'★'.repeat(r.rating)}`:''}</div>
+    </div>
+    <div style="font-weight:700;">Rs.${r.fare}</div>
+  </div>`;
+}
+
+/* ---------------- DRIVER HOME ---------------- */
+function driverHome(){
+  if(!State.driver.registered){
+    return `<div class="screen">
+      ${TopBar({title:'Driver Mode', right:`<div class="icon-btn" onclick="setMode('passenger')">${ic('user')}</div>`})}
+      <div class="container center-col" style="padding-top:40px;">
+        <div style="width:74px;height:74px;border-radius:20px;background:var(--primary-tint); display:flex; align-items:center; justify-content:center; color:var(--primary); margin-bottom:18px;">${ic('car',36)}</div>
+        <h2 class="section-title">Driver Bunain</h2>
+        <p class="muted" style="margin-bottom:22px;">Online registration mukammal karein aur ride requests lena shuru karein.</p>
+        <button class="btn btn-primary" onclick="go('driverRegister')">Registration Shuru Karein</button>
+      </div>
+    </div>`;
+  }
+  const html = `<div class="screen">
+    <div class="topbar">
+      <div class="icon-btn" onclick="go('settings')">${ic('menu')}</div>
+      <div class="topbar-title">${State.driver.online? 'Online — Requests ka intezar':'Offline'}</div>
+      <div class="icon-btn" onclick="setMode('passenger')">${ic('user')}</div>
+    </div>
+    <div class="container">
+      <div class="map-box" id="mapDriverHome"></div>
+      <div class="card row-between" style="margin-top:14px;">
+        <div class="row" style="gap:10px;">
+          <div class="pulse" style="background:${State.driver.online?'var(--primary)':'var(--text-muted)'}"></div>
+          <div>
+            <b>${State.driver.online? 'Aap Online hain':'Aap Offline hain'}</b>
+            <div class="muted" style="font-size:12px;">${State.driver.vehicleType||''} ${State.driver.vehiclePlate?('• '+State.driver.vehiclePlate):''}</div>
+          </div>
+        </div>
+        <div class="toggle ${State.driver.online?'on':''}" onclick="toggleDriverOnline()"><div class="toggle-dot"></div></div>
+      </div>
+      ${State.driver.online? `<div class="card" style="margin-top:14px; text-align:center; cursor:pointer;" onclick="simulateRideRequest()">
+        <p class="muted" style="margin:4px 0 10px;">Naye ride request ka intezar ho raha hai…</p>
+        <span class="link">Demo Request Dikhayein</span>
+      </div>` : ''}
+      <div class="row" style="gap:12px; margin:16px 0;">
+        <div class="stat-box" style="flex:1;"><div class="stat-num">Rs.${State.driverStats.today}</div><div class="muted" style="font-size:12px;">Aaj ki Aamdani</div></div>
+        <div class="stat-box" style="flex:1;"><div class="stat-num">${State.driverStats.totalRides}</div><div class="muted" style="font-size:12px;">Total Rides</div></div>
+      </div>
+      <div class="row" style="gap:12px; margin-bottom:16px;">
+        ${quickTile('activity','Kaarkardagi', "go('performance')")}
+        ${quickTile('cash','Loans', "go('loans')")}
+        ${quickTile('shield','Safety', "go('safety')")}
+        ${quickTile('help','Help', "go('help')")}
+      </div>
+    </div>
+  </div>`;
+  return html;
+}
+function toggleDriverOnline(){ State.driver.online = !State.driver.online; render(); if(State.driver.online) toast('Aap ab online hain'); }
+function simulateRideRequest(){
+  document.getElementById('rideReqModalHolder')?.remove();
+  const modal = document.createElement('div');
+  modal.className='modal-overlay'; modal.id='rideReqModal';
+  modal.innerHTML = `<div class="modal-sheet">
+    <div class="row-between" style="margin-bottom:10px;"><b style="font-size:17px;">Naya Ride Request</b><span class="badge badge-green">Rs. 240 offer</span></div>
+    <div class="row" style="gap:10px; margin-bottom:6px;"><div style="color:var(--primary);">${ic('location',18)}</div><div style="font-size:14px;">Pickup: Cantt Chowk, Multan</div></div>
+    <div class="row" style="gap:10px; margin-bottom:14px;"><div style="color:var(--danger);">${ic('location',18)}</div><div style="font-size:14px;">Drop: Nishtar Chowk, Multan</div></div>
+    <div class="row" style="gap:10px;">
+      <button class="btn btn-ghost" onclick="document.getElementById('rideReqModal').remove()">Reject</button>
+      <button class="btn btn-primary" onclick="document.getElementById('rideReqModal').remove(); toast('Ride accept ki gayi! Passenger ki taraf rawana hon.')">Accept</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+/* ---------------- BOOK RIDE FLOW (passenger) ---------------- */
+function screenBookRide(){
+  const b = State.booking;
+  return `<div class="screen">
+    ${TopBar({title:'Ride Book Karein', showBack:true})}
+    <div class="container" style="padding-top:6px;">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="field" style="margin-bottom:10px;">
+          <label>Pickup</label>
+          <input value="${b.pickup}" oninput="State.booking.pickup=this.value">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Manzil</label>
+          <input placeholder="Kahan jaana hai?" value="${b.drop}" oninput="State.booking.drop=this.value">
+        </div>
+      </div>
+      <label>Gaari ka Type Chunain</label>
+      <div class="row" style="gap:10px; margin:10px 0 18px;">
+        ${vehicleTile('Car','car')}
+        ${vehicleTile('Bike','bike')}
+        ${vehicleTile('Rickshaw','rickshaw')}
+      </div>
+      <label>Apna Kiraya Offer Karein (InDrive style)</label>
+      <div class="row" style="gap:10px; margin:8px 0 18px;">
+        <input type="number" placeholder="Rs." value="${b.offerFare}" oninput="State.booking.offerFare=this.value" style="flex:1;">
+        <button class="btn-sm btn-outline btn" style="width:auto;" onclick="State.booking.offerFare = suggestedFare(); render()">Tajweez</button>
+      </div>
+      <button class="btn btn-primary" onclick="submitRideOffer()">Driver Talash Karein</button>
+    </div>
+  </div>`;
+}
+function vehicleTile(name, icon){
+  const sel = State.booking.vehicle===name;
+  return `<div class="veh-card ${sel?'selected':''}" style="flex:1;" onclick="State.booking.vehicle='${name}'; render()">
+    <div style="color:${sel?'var(--primary)':'var(--text-muted)'}; margin-bottom:6px;">${ic(icon,26)}</div>
+    <div style="font-size:12.5px; font-weight:700;">${name}</div>
+  </div>`;
+}
+function suggestedFare(){ return String(150 + Math.floor(Math.random()*200)); }
+function submitRideOffer(){
+  if(!State.booking.drop){ toast('Manzil darj karein'); return; }
+  if(!State.booking.vehicle){ toast('Gaari ka type chunain'); return; }
+  if(!State.booking.offerFare){ toast('Kiraya offer karein'); return; }
+  go('matching');
+  setTimeout(()=>{
+    State.booking.matchedDriver = {name:'Bilal Ahmed', rating:4.9, car:'Suzuki Alto — LEA-4521', eta:'4 min'};
+    if(State.screen==='matching'){ go('rideTracking'); }
+  }, 2600);
+}
+function screenMatching(){
+  return `<div class="screen center-col" style="justify-content:center; min-height:100vh; padding:24px;">
+    <div class="pulse" style="width:60px;height:60px; margin-bottom:26px;"></div>
+    <h3>Aapke liye behtareen driver dhoond rahay hain…</h3>
+    <p class="muted">Offer: Rs. ${State.booking.offerFare} • ${State.booking.vehicle}</p>
+    <button class="btn btn-ghost" style="max-width:200px; margin-top:20px;" onclick="go('home')">Cancel Karein</button>
+  </div>`;
+}
+function screenRideTracking(){
+  const d = State.booking.matchedDriver || {name:'Bilal Ahmed', rating:4.9, car:'Suzuki Alto — LEA-4521', eta:'4 min'};
+  return `<div class="screen">
+    ${TopBar({title:'Ride Jari Hai', showBack:false})}
+    <div class="map-box" style="border-radius:0; height:260px;" id="mapTracking"></div>
+    <div class="container" style="margin-top:14px;">
+      <div class="card">
+        <div class="row-between">
+          <div class="row" style="gap:12px;">
+            <div class="avatar" style="width:46px;height:46px;">${d.name.split(' ').map(n=>n[0]).join('')}</div>
+            <div>
+              <b>${d.name}</b>
+              <div class="muted" style="font-size:12.5px;">★ ${d.rating} • ${d.car}</div>
+            </div>
+          </div>
+          <div class="badge badge-green">ETA ${d.eta}</div>
+        </div>
+      </div>
+      <div class="row" style="gap:10px; margin:14px 0;">
+        <button class="btn btn-outline" onclick="toast('Call feature demo mein mojood nahi')">Call</button>
+        <button class="btn btn-outline" onclick="toast('Chat feature demo mein mojood nahi')">Message</button>
+      </div>
+      <button class="btn btn-danger" style="margin-bottom:10px;" onclick="go('safety')">${ic('sos',18)} Safety / SOS</button>
+      <button class="btn btn-primary" onclick="completeRide()">Ride Mukammal Karein (Demo)</button>
+    </div>
+  </div>`;
+}
+function completeRide(){
+  State.rideHistory.unshift({id:Date.now(), from:State.booking.pickup, to:State.booking.drop||'Manzil', fare:Number(State.booking.offerFare)||250, date:'Aaj', status:'Mukammal', rating:null, driver:State.booking.matchedDriver?.name});
+  State.wallet.balance -= (Number(State.booking.offerFare)||0);
+  State.wallet.txns.unshift({id:Date.now(), type:'ride', amount:-(Number(State.booking.offerFare)||0), note:'Ride: '+(State.booking.pickup)+' → '+(State.booking.drop||'Manzil'), date:'Aaj'});
+  go('rateDriver');
+}
+function screenRateDriver(){
+  return `<div class="screen center-col" style="justify-content:center; min-height:100vh; padding:24px;">
+    <div class="avatar" style="width:70px;height:70px; margin-bottom:16px; font-size:22px;">${(State.booking.matchedDriver?.name||'BA').split(' ').map(n=>n[0]).join('')}</div>
+    <h3>Apni ride ko rate karein</h3>
+    <p class="muted" style="margin-bottom:16px;">${State.booking.matchedDriver?.name||'Driver'} ke saath safar kaisa raha?</p>
+    <div class="row" id="starRow" style="gap:6px; margin-bottom:22px;">
+      ${[1,2,3,4,5].map(i=>`<span class="star" data-i="${i}" onclick="setStar(${i})">★</span>`).join('')}
+    </div>
+    <textarea placeholder="Tabsara likhein (optional)" rows="3" style="max-width:320px; margin-bottom:16px;"></textarea>
+    <button class="btn btn-primary" style="max-width:320px;" onclick="toast('Shukriya! Rating jama ho gayi'); State.booking={step:'set-pickup', pickup:'Aapki Location (GPS)', drop:'', vehicle:null, offerFare:'', matchedDriver:null}; go('home')">Submit Karein</button>
+  </div>`;
+}
+function setStar(i){
+  document.querySelectorAll('#starRow .star').forEach((s,idx)=>{ s.classList.toggle('filled', idx<i); });
+}
+
+/* ---------------- CITY TO CITY ---------------- */
+function screenCityToCity(){
+  const c = State.cityTrip;
+  return `<div class="screen">
+    ${TopBar({title:'City to City', showBack:true})}
+    <div class="container">
+      <p class="muted" style="margin-bottom:16px;">Dosray shehar tak safar book karein — kum kiraye, mehfooz safar.</p>
+      <div class="field"><label>Se (From)</label><input placeholder="Multan" value="${c.from}" oninput="State.cityTrip.from=this.value"></div>
+      <div class="field"><label>Tak (To)</label><input placeholder="Lahore" value="${c.to}" oninput="State.cityTrip.to=this.value"></div>
+      <div class="field"><label>Tareekh</label><input type="date" value="${c.date}" oninput="State.cityTrip.date=this.value"></div>
+      <div class="field">
+        <label>Nashistain (Seats)</label>
+        <div class="row-between card" style="padding:10px 14px;">
+          <span>${c.seats} nashist</span>
+          <div class="row" style="gap:14px;">
+            <div class="icon-btn" onclick="State.cityTrip.seats=Math.max(1,State.cityTrip.seats-1); render()">−</div>
+            <div class="icon-btn" onclick="State.cityTrip.seats=Math.min(4,State.cityTrip.seats+1); render()">+</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="if(!c.from||!c.to){toast('From aur To darj karein')}else{go('matching')}">Drivers Talash Karein</button>
+      <div class="divider"></div>
+      <div class="section-title" style="font-size:15px;">Mash-hoor Routes</div>
+      ${['Multan → Lahore  •  Rs. 1800','Multan → Karachi  •  Rs. 4500','Multan → Islamabad  •  Rs. 3200'].map(t=>`<div class="list-item">${ic('truck',18)}<div style="flex:1; font-size:13.5px;">${t}</div>${ic('chevron',16)}</div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---------------- FREIGHT ---------------- */
+function screenFreight(){
+  const f = State.freight;
+  return `<div class="screen">
+    ${TopBar({title:'Freight — Samaan Bhejein', showBack:true})}
+    <div class="container">
+      <div class="field"><label>Pickup Location</label><input placeholder="Kahan se uthana hai" value="${f.from}" oninput="State.freight.from=this.value"></div>
+      <div class="field"><label>Drop Location</label><input placeholder="Kahan pohanchana hai" value="${f.to}" oninput="State.freight.to=this.value"></div>
+      <div class="field"><label>Samaan ki Tafseel</label><textarea rows="2" placeholder="Maslan: Furniture, 2 boxes" oninput="State.freight.item=this.value">${f.item}</textarea></div>
+      <label>Gaari ka Size</label>
+      <div class="row" style="gap:10px; margin:8px 0 18px;">
+        ${['Chota Pickup','Mazboot Truck','Container'].map(v=>`<div class="veh-card ${f.vehicle===v?'selected':''}" style="flex:1; font-size:11.5px;" onclick="State.freight.vehicle='${v}'; render()">${ic('truck',22)}<div style="margin-top:6px;">${v}</div></div>`).join('')}
+      </div>
+      <button class="btn btn-primary" onclick="if(!f.to){toast('Drop location darj karein')}else{go('matching')}">Freight Driver Talash Karein</button>
+    </div>
+  </div>`;
+}
+
+/* ---------------- WALLET ---------------- */
+function screenWallet(){
+  return `<div class="screen">
+    ${TopBar({title:'E-Wallet', showBack:true})}
+    <div class="container">
+      <div class="card center-col" style="padding:26px; background:linear-gradient(135deg, var(--primary-dark), var(--primary)); color:#fff; border:none;">
+        <span style="opacity:.85; font-size:13px;">Wallet Balance</span>
+        <h1 style="margin:6px 0 18px; font-size:34px;" class="display">Rs. ${State.wallet.balance.toLocaleString()}</h1>
+        <div class="row" style="gap:10px; width:100%;">
+          <button class="btn" style="background:#fff; color:var(--primary-dark);" onclick="go('topup')">Top-Up</button>
+          <button class="btn" style="background:rgba(255,255,255,0.18); color:#fff;" onclick="toast('Withdraw request bhej di gayi')">Withdraw</button>
+        </div>
+      </div>
+      <div class="section-title" style="margin-top:20px; font-size:16px;">Lain-Dain ki Tareekh</div>
+      ${State.wallet.txns.map(t=>`<div class="list-item">
+        <div style="width:38px;height:38px;border-radius:10px; background:${t.amount>0?'var(--primary-tint)':'var(--danger-tint)'}; display:flex; align-items:center; justify-content:center; color:${t.amount>0?'var(--primary)':'var(--danger)'};">${ic(t.type==='topup'?'wallet':t.type==='refund'?'cash':'car',18)}</div>
+        <div style="flex:1;"><div style="font-weight:700; font-size:13.5px;">${t.note}</div><div class="muted" style="font-size:11.5px;">${t.date}</div></div>
+        <div style="font-weight:700; color:${t.amount>0?'var(--primary)':'var(--text)'};">${t.amount>0?'+':''}Rs.${t.amount}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+function screenTopUp(){
+  return `<div class="screen">
+    ${TopBar({title:'Top-Up Wallet', showBack:true})}
+    <div class="container">
+      <label>Raqam Chunain</label>
+      <div class="row" style="gap:10px; flex-wrap:wrap; margin:10px 0 18px;">
+        ${[500,1000,2000,5000].map(a=>`<div class="chip" onclick="document.getElementById('topupAmt').value=${a}">Rs. ${a}</div>`).join('')}
+      </div>
+      <div class="field"><label>Ya khud raqam likhein</label><input id="topupAmt" type="number" placeholder="Rs."></div>
+      <label>Payment Method</label>
+      <div style="margin:10px 0 20px;">
+        ${['JazzCash','Easypaisa','Bank Card','Cash Deposit'].map((m,i)=>`<div class="list-item" onclick="selectPay(this)">
+          <div class="toggle ${i===0?'on':''}" style="pointer-events:none;"><div class="toggle-dot"></div></div>
+          <div style="flex:1;">${m}</div>
+        </div>`).join('')}
+      </div>
+      <button class="btn btn-primary" onclick="doTopup()">Top-Up Karein</button>
+    </div>
+  </div>`;
+}
+function selectPay(el){
+  el.parentElement.querySelectorAll('.toggle').forEach(t=>t.classList.remove('on'));
+  el.querySelector('.toggle').classList.add('on');
+}
+function doTopup(){
+  const amt = Number(document.getElementById('topupAmt').value);
+  if(!amt){ toast('Raqam darj karein'); return; }
+  State.wallet.balance += amt;
+  State.wallet.txns.unshift({id:Date.now(), type:'topup', amount:amt, note:'Wallet Top-up', date:'Aaj'});
+  toast('Rs.'+amt+' wallet mein add ho gaye');
+  go('wallet');
+}
+
+/* ---------------- ACTIVITY (ride history full) ---------------- */
+function screenActivity(){
+  return `<div class="screen">
+    ${TopBar({title:'Rides ki Tareekh', showBack:true})}
+    <div class="container">
+      ${State.rideHistory.map(r=>`<div class="card" style="margin-bottom:12px;">
+        <div class="row-between">
+          <b style="font-size:14px;">${r.from} → ${r.to}</b>
+          <span class="badge ${r.status==='Mukammal'?'badge-green':'badge-red'}">${r.status}</span>
+        </div>
+        <div class="muted" style="font-size:12.5px; margin:6px 0;">${r.date} ${r.driver? '• Driver: '+r.driver : ''}</div>
+        <div class="row-between">
+          <span style="font-weight:700;">Rs. ${r.fare}</span>
+          ${r.rating? `<span style="color:var(--accent);">${'★'.repeat(r.rating)}</span>` : (r.status==='Mukammal'?`<span class="link" onclick="toast('Rating submit ki gayi')">Rate Karein</span>`:'')}
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---------------- NOTIFICATIONS ---------------- */
+function screenNotifications(){
+  return `<div class="screen">
+    ${TopBar({title:'Notifications', showBack:true})}
+    <div class="container">
+      ${State.notifications.map(n=>`<div class="list-item" onclick="markRead(${n.id})">
+        <div style="width:40px;height:40px;border-radius:12px; background:${n.unread?'var(--primary-tint)':'var(--surface-2)'}; display:flex; align-items:center; justify-content:center; color:var(--primary); flex-shrink:0;">${ic('bell',18)}</div>
+        <div style="flex:1;">
+          <div style="font-weight:${n.unread?800:600}; font-size:13.5px;">${n.title}</div>
+          <div class="muted" style="font-size:12.5px; margin:2px 0;">${n.body}</div>
+          <div class="muted" style="font-size:11px;">${n.time}</div>
+        </div>
+        ${n.unread?'<div style="width:8px;height:8px;border-radius:50%;background:var(--primary); flex-shrink:0;"></div>':''}
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+function markRead(id){ const n = State.notifications.find(x=>x.id===id); if(n) n.unread=false; render(); }
+
+/* ---------------- SAFETY ---------------- */
+function screenSafety(){
+  return `<div class="screen">
+    ${TopBar({title:'Safety Center', showBack:true})}
+    <div class="container">
+      <div class="card center-col" style="padding:24px; margin-bottom:16px;">
+        <div style="width:70px;height:70px;border-radius:50%; background:var(--danger-tint); color:var(--danger); display:flex; align-items:center; justify-content:center; margin-bottom:12px;">${ic('sos',34)}</div>
+        <button class="btn btn-danger" style="max-width:220px;" onclick="toast('Emergency services ko notify kar diya gaya (demo)')">Emergency SOS Bhejein</button>
+        <p class="muted" style="font-size:12px; margin-top:10px;">Sirf emergency mein istemal karein</p>
+      </div>
+      <div class="section-title" style="font-size:16px;">Safety Features</div>
+      ${safetyRow('shield','Trip Share Karein','Apni live location kisi trusted contact ke saath share karein')}
+      ${safetyRow('user','Trusted Contacts','2 contacts shamil hain')}
+      ${safetyRow('help','24/7 Support Line','Foran humari safety team se raabta karein')}
+      ${safetyRow('shield','Driver Verification','Har driver ka background check hota hai')}
+    </div>
+  </div>`;
+}
+function safetyRow(icon,title,sub){
+  return `<div class="list-item" onclick="toast('${title} — demo feature')">
+    <div style="width:38px;height:38px;border-radius:10px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; color:var(--primary);">${ic(icon,18)}</div>
+    <div style="flex:1;"><div style="font-weight:700; font-size:13.5px;">${title}</div><div class="muted" style="font-size:12px;">${sub}</div></div>
+    ${ic('chevron',16)}
+  </div>`;
+}
+
+/* ---------------- SETTINGS ---------------- */
+function screenSettings(){
+  return `<div class="screen">
+    ${TopBar({title:'Settings', showBack:true})}
+    <div class="container">
+      <div class="card row-between" style="margin-bottom:16px;">
+        <div class="row" style="gap:10px;">${ic(State.theme==='light'?'sun':'moon',20)}<b>${State.theme==='light'?'Light Mode':'Dark Mode'}</b></div>
+        <div class="toggle ${State.theme==='dark'?'on':''}" onclick="toggleTheme()"><div class="toggle-dot"></div></div>
+      </div>
+      ${settingsRow('cash','Tariffs','Kiraya calculation aur pricing rules', "go('settingsTariffs')")}
+      ${settingsRow('car','Ride Requests','Request radius, auto-accept', "go('settingsRideReq')")}
+      ${settingsRow('location','Navigation','Maps app aur route preferences', "go('settingsNav')")}
+      ${settingsRow('location','Locations','Ghar, Kaam aur mehfooz jagahein', "go('settingsLocations')")}
+      ${settingsRow('location','Map Access','Location permission control', "go('settingsMapAccess')")}
+      ${settingsRow('bell','Notifications','Push aur SMS alerts', "go('settingsNotif')")}
+      ${settingsRow('shield','Safety','SOS aur trusted contacts', "go('safety')")}
+      ${settingsRow('help','Help & Support','Sawalat aur raabta', "go('help')")}
+      ${settingsRow('gift','Invite a Friend','Referral code share karein', "go('invite')")}
+      ${settingsRow('user','Profile','Naam, tasveer aur maloomat', "go('profile')")}
+      <div class="divider"></div>
+      <button class="btn btn-ghost" style="color:var(--danger);" onclick="doLogout()">${ic('logout',18)} Logout</button>
+    </div>
+  </div>`;
+}
+function settingsRow(icon,title,sub,onclick){
+  return `<div class="list-item" onclick="${onclick}">
+    <div style="width:38px;height:38px;border-radius:10px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; color:var(--primary);">${ic(icon,18)}</div>
+    <div style="flex:1;"><div style="font-weight:700; font-size:13.5px;">${title}</div><div class="muted" style="font-size:11.5px;">${sub}</div></div>
+    ${ic('chevron',16)}
+  </div>`;
+}
+function doLogout(){ State.authed=false; State.screen='splash'; render(); toast('Aap logout ho gaye'); }
+
+function screenSettingsTariffs(){
+  return `<div class="screen">${TopBar({title:'Tariffs', showBack:true})}
+    <div class="container">
+      <div class="card row-between" style="margin-bottom:16px;">
+        <div><b>Auto Tariff Suggestion</b><p class="muted" style="font-size:12px; margin:4px 0 0;">System khud munasib kiraya tajweez karay</p></div>
+        <div class="toggle ${State.settings.tariffAuto?'on':''}" onclick="State.settings.tariffAuto=!State.settings.tariffAuto; render()"><div class="toggle-dot"></div></div>
+      </div>
+      <div class="section-title" style="font-size:15px;">Rates (per km)</div>
+      ${[['Car','Rs. 28'],['Bike','Rs. 14'],['Rickshaw','Rs. 18']].map(([n,r])=>`<div class="list-item"><div style="flex:1;">${n}</div><b>${r}</b></div>`).join('')}
+    </div>
+  </div>`;
+}
+function screenSettingsRideReq(){
+  return `<div class="screen">${TopBar({title:'Ride Requests', showBack:true})}
+    <div class="container">
+      <label>Request Radius: ${State.settings.rideRequestRadius} km</label>
+      <input type="range" min="1" max="15" value="${State.settings.rideRequestRadius}" oninput="State.settings.rideRequestRadius=this.value; document.getElementById('radiusLbl').textContent=this.value" style="margin:10px 0 20px; padding:0;">
+      <div class="card row-between"><b>Auto-Accept Requests</b><div class="toggle" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div></div>
+    </div>
+  </div>`;
+}
+function screenSettingsNav(){
+  return `<div class="screen">${TopBar({title:'Navigation', showBack:true})}
+    <div class="container">
+      <label>Navigation App</label>
+      ${['Maps App (default)','Alternate Maps App'].map(a=>`<div class="list-item" onclick="State.settings.navApp='${a}'; render()">
+        <div class="toggle ${State.settings.navApp===a?'on':''}" style="pointer-events:none;"><div class="toggle-dot"></div></div>
+        <div style="flex:1;">${a}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+function screenSettingsLocations(){
+  return `<div class="screen">${TopBar({title:'Locations', showBack:true})}
+    <div class="container">
+      ${settingsRow('home','Ghar','Set karein apna ghar ka address', "toast('Ghar location set ki gayi')")}
+      ${settingsRow('car','Kaam','Set karein apni office location', "toast('Office location set ki gayi')")}
+      ${settingsRow('location','Mehfooz Jagahein','Pasandeeda locations add karein', "toast('Location add ki gayi')")}
+    </div>
+  </div>`;
+}
+function screenSettingsMapAccess(){
+  return `<div class="screen">${TopBar({title:'Map Access', showBack:true})}
+    <div class="container">
+      <div class="card row-between"><b>Location Access</b><div class="toggle ${State.settings.mapAccess?'on':''}" onclick="State.settings.mapAccess=!State.settings.mapAccess; render()"><div class="toggle-dot"></div></div></div>
+      <p class="muted" style="font-size:13px; margin-top:14px;">Map access active hone par hum aapki live location driver ke saath share kar sakte hain taake pickup asaan ho.</p>
+    </div>
+  </div>`;
+}
+function screenSettingsNotif(){
+  return `<div class="screen">${TopBar({title:'Notifications', showBack:true})}
+    <div class="container">
+      <div class="card row-between" style="margin-bottom:14px;"><b>Push Notifications</b><div class="toggle ${State.settings.notifPush?'on':''}" onclick="State.settings.notifPush=!State.settings.notifPush; render()"><div class="toggle-dot"></div></div></div>
+      <div class="card row-between"><b>SMS Alerts</b><div class="toggle ${State.settings.notifSms?'on':''}" onclick="State.settings.notifSms=!State.settings.notifSms; render()"><div class="toggle-dot"></div></div></div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- PERFORMANCE (driver) ---------------- */
+function screenPerformance(){
+  const s = State.driverStats;
+  return `<div class="screen">
+    ${TopBar({title:'Kaarkardagi', showBack:true})}
+    <div class="container">
+      <div class="row" style="gap:12px; margin-bottom:14px;">
+        <div class="stat-box" style="flex:1;"><div class="stat-num">Rs.${s.today}</div><div class="muted" style="font-size:11.5px;">Aaj ki Aamdani</div></div>
+        <div class="stat-box" style="flex:1;"><div class="stat-num">Rs.${s.month.toLocaleString()}</div><div class="muted" style="font-size:11.5px;">Is Mahiny ki Aamdani</div></div>
+      </div>
+      <div class="row" style="gap:12px; margin-bottom:20px;">
+        <div class="stat-box" style="flex:1;"><div class="stat-num">${s.totalRides}</div><div class="muted" style="font-size:11.5px;">Total Rides</div></div>
+        <div class="stat-box" style="flex:1;"><div class="stat-num">${s.acceptance}%</div><div class="muted" style="font-size:11.5px;">Acceptance Rate</div></div>
+        <div class="stat-box" style="flex:1;"><div class="stat-num">${State.user.rating}</div><div class="muted" style="font-size:11.5px;">Rating</div></div>
+      </div>
+      <div class="section-title" style="font-size:16px;">Achievements</div>
+      ${s.badges.map(b=>`<div class="list-item"><div style="width:38px;height:38px;border-radius:10px; background:var(--accent-tint); color:var(--accent); display:flex; align-items:center; justify-content:center;">${ic('trophy',18)}</div><div style="flex:1; font-weight:700; font-size:13.5px;">${b}</div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---------------- LOANS ---------------- */
+function screenLoans(){
+  return `<div class="screen">
+    ${TopBar({title:'Driver Loans', showBack:true})}
+    <div class="container">
+      <p class="muted" style="margin-bottom:16px;">Apni gaari behtar rakhne ke liye asaan qiston par loan hasil karein.</p>
+      ${State.loans.map(l=>`<div class="card" style="margin-bottom:12px;">
+        <div class="row-between" style="margin-bottom:6px;"><b>${l.title}</b><span class="badge badge-green">${l.rate}</span></div>
+        <div class="muted" style="font-size:13px; margin-bottom:12px;">${l.amount} • Meyad: ${l.term}</div>
+        <button class="btn btn-outline btn-sm" onclick="toast('${l.title} ke liye application jama ho gayi')">Apply Karein</button>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---------------- HELP & SUPPORT ---------------- */
+function screenHelp(){
+  const faqs = [
+    ['Ride cancel kaisay karoon?','Ride tracking screen par "Cancel" button se aap ride cancel kar saktay hain.'],
+    ['Wallet top-up mein kitna waqt lagta hai?','Zyada tar payments foran process ho jati hain.'],
+    ['Driver ban-nay ke liye kya documents chahyain?','CNIC, driving license aur vehicle documents darkar hain.'],
+    ['Fare kaisay tay hota hai?','Aap khud kiraya offer kar saktay hain ya system ki tajweez le saktay hain.'],
+  ];
+  return `<div class="screen">
+    ${TopBar({title:'Help & Support', showBack:true})}
+    <div class="container">
+      <div class="row" style="gap:12px; margin-bottom:20px;">
+        <button class="btn btn-primary" onclick="toast('Live chat khul rahi hai (demo)')">Live Chat</button>
+        <button class="btn btn-outline" onclick="toast('Call: 0800-RAAHGO')">Hamein Call Karein</button>
+      </div>
+      <div class="section-title" style="font-size:16px;">Aksar Poochay Janay Walay Sawalat</div>
+      ${faqs.map(([q,a])=>`<div class="card" style="margin-bottom:10px; cursor:pointer;" onclick="this.querySelector('.faq-a').style.display = this.querySelector('.faq-a').style.display==='block'?'none':'block'">
+        <div class="row-between"><b style="font-size:13.5px;">${q}</b>${ic('chevron',16)}</div>
+        <p class="faq-a muted" style="display:none; font-size:13px; margin:10px 0 0;">${a}</p>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---------------- DRIVER REGISTRATION ---------------- */
+function screenDriverRegister(){
+  return `<div class="screen">
+    ${TopBar({title:'Driver Registration', showBack:true})}
+    <div class="container">
+      <div class="progress-track" style="margin-bottom:20px;"><div class="progress-fill" style="width:40%;"></div></div>
+      <div class="field"><label>Poora Naam</label><input value="${State.user.name}"></div>
+      <div class="field"><label>CNIC Number</label><input placeholder="XXXXX-XXXXXXX-X"></div>
+      <div class="field"><label>Driving License Number</label><input placeholder="License number"></div>
+      <label>Vehicle Type Chunain</label>
+      <div class="row" style="gap:10px; margin:10px 0 18px;">
+        ${['Car','Bike','Rickshaw'].map(v=>`<div class="veh-card ${State.driver.vehicleType===v?'selected':''}" style="flex:1;" onclick="State.driver.vehicleType='${v}'; render()">${ic(v.toLowerCase(),24)}<div style="font-size:12px; margin-top:6px; font-weight:700;">${v}</div></div>`).join('')}
+      </div>
+      <div class="field"><label>Vehicle Registration Number</label><input placeholder="Maslan: LEA-4521" oninput="State.driver.vehiclePlate=this.value"></div>
+      <label>Documents Upload Karein</label>
+      <div class="row" style="gap:10px; margin:10px 0 18px;">
+        ${['CNIC Front/Back','License','Vehicle Docs'].map(d=>`<div class="card" style="flex:1; text-align:center; padding:14px 8px; cursor:pointer;" onclick="toast('${d} upload ho gaya')">${ic('camera',20)}<div style="font-size:11px; margin-top:6px;">${d}</div></div>`).join('')}
+      </div>
+      <button class="btn btn-primary" onclick="submitDriverReg()">Registration Jama Karwayein</button>
+    </div>
+  </div>`;
+}
+function submitDriverReg(){
+  if(!State.driver.vehicleType){ toast('Vehicle type chunain'); return; }
+  State.driver.registered = true;
+  State.driver.docsSubmitted = true;
+  toast('Mubarak ho! Aapki registration jama ho gayi. Jald tasdeeq hogi.');
+  go('home');
+}
+
+/* ---------------- INVITE A FRIEND ---------------- */
+function screenInvite(){
+  return `<div class="screen">
+    ${TopBar({title:'Invite a Friend', showBack:true})}
+    <div class="container center-col" style="padding-top:20px;">
+      <div style="width:80px;height:80px;border-radius:22px;background:var(--accent-tint); color:var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:16px;">${ic('gift',38)}</div>
+      <h3 style="margin:0 0 6px;">Dost ko bulayein, dono kamayein</h3>
+      <p class="muted" style="margin-bottom:20px;">Har naye dost ki pehli ride par aap dono ko Rs. 200 bonus milega.</p>
+      <div class="card row-between" style="width:100%;">
+        <b style="letter-spacing:1px;">${State.user.referral}</b>
+        <button class="btn-sm btn btn-outline" onclick="navigator.clipboard?.writeText('${State.user.referral}'); toast('Code copy ho gaya')">Copy</button>
+      </div>
+      <button class="btn btn-primary" style="margin-top:18px;" onclick="toast('Invite link share ki gayi')">Link Share Karein</button>
+    </div>
+  </div>`;
+}
+
+/* ---------------- PROFILE ---------------- */
+function screenProfile(){
+  const u = State.user;
+  return `<div class="screen">
+    ${TopBar({title:'Profile', showBack:true, right:`<div class="icon-btn" onclick="go('settings')">${ic('settings')}</div>`})}
+    <div class="container center-col" style="padding-top:10px;">
+      <div style="position:relative; margin-bottom:14px;">
+        <div class="avatar" id="profileAvatar" style="width:92px;height:92px; font-size:30px;">${u.photo?`<img src="${u.photo}" style="width:100%;height:100%;object-fit:cover;">`:u.name.split(' ').map(n=>n[0]).join('')}</div>
+        <div class="icon-btn" style="position:absolute; bottom:-4px; right:-4px; background:var(--primary); color:#fff; border:none;" onclick="document.getElementById('photoInput').click()">${ic('camera',16)}</div>
+        <input id="photoInput" type="file" accept="image/*" style="display:none" onchange="uploadPhoto(event)">
+      </div>
+      <h3 style="margin:0 0 2px;">${u.name}</h3>
+      <div class="muted" style="font-size:13px; margin-bottom:2px;">${u.phone}</div>
+      <div class="row" style="gap:4px; color:var(--accent); margin-bottom:20px;">${ic('star',16)} <b style="color:var(--text);">${u.rating}</b></div>
+      <div class="row" style="gap:10px; width:100%; margin-bottom:18px;">
+        <button class="btn btn-outline" onclick="go('editProfile')">Profile Edit Karein</button>
+        <button class="btn btn-outline" onclick="setMode(State.mode==='passenger'?'driver':'passenger')">${State.mode==='passenger'?'Driver Mode':'Passenger Mode'}</button>
+      </div>
+      <div style="width:100%;">
+        ${settingsRow('activity','Rides ki Tareekh','Guzashta safar dekhein', "go('activity')")}
+        ${settingsRow('wallet','Wallet','Balance aur transactions', "go('wallet')")}
+        ${settingsRow('gift','Invite a Friend','Referral code share karein', "go('invite')")}
+        ${settingsRow('settings','Settings','App preferences', "go('settings')")}
+        ${settingsRow('help','Help & Support','Sawalat aur raabta', "go('help')")}
+      </div>
+      <button class="btn btn-ghost" style="color:var(--danger); margin-top:14px;" onclick="doLogout()">${ic('logout',18)} Logout</button>
+    </div>
+  </div>`;
+}
+function screenEditProfile(){
+  const u = State.user;
+  return `<div class="screen">
+    ${TopBar({title:'Profile Edit Karein', showBack:true})}
+    <div class="container">
+      <div class="field"><label>Poora Naam</label><input id="editName" value="${u.name}"></div>
+      <div class="field"><label>Phone Number</label><input id="editPhone" value="${u.phone}"></div>
+      <div class="field"><label>Email</label><input id="editEmail" value="${u.email}"></div>
+      <button class="btn btn-primary" onclick="saveProfile()">Tabdeeliyan Mehfooz Karein</button>
+    </div>
+  </div>`;
+}
+function saveProfile(){
+  State.user.name = document.getElementById('editName').value || State.user.name;
+  State.user.phone = document.getElementById('editPhone').value || State.user.phone;
+  State.user.email = document.getElementById('editEmail').value || State.user.email;
+  toast('Profile update ho gayi');
+  go('profile');
+}
+function uploadPhoto(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{ State.user.photo = e.target.result; render(); toast('Profile picture update ho gayi'); };
+  reader.readAsDataURL(file);
+}
+
+/* ---------------- RENDER ROUTER ---------------- */
+const screens = {
+  splash: screenSplash, login: screenLogin, signup: screenSignup, otp: screenOTP, roleSelect: screenRoleSelect,
+  home: screenHome, bookRide: screenBookRide, matching: screenMatching, rideTracking: screenRideTracking, rateDriver: screenRateDriver,
+  cityToCity: screenCityToCity, freight: screenFreight, wallet: screenWallet, topup: screenTopUp, activity: screenActivity,
+  notifications: screenNotifications, safety: screenSafety, settings: screenSettings,
+  settingsTariffs: screenSettingsTariffs, settingsRideReq: screenSettingsRideReq, settingsNav: screenSettingsNav,
+  settingsLocations: screenSettingsLocations, settingsMapAccess: screenSettingsMapAccess, settingsNotif: screenSettingsNotif,
+  performance: screenPerformance, loans: screenLoans, help: screenHelp, driverRegister: screenDriverRegister,
+  invite: screenInvite, profile: screenProfile, editProfile: screenEditProfile,
+};
+const noNavScreens = ['splash','login','signup','otp','roleSelect','bookRide','matching','rideTracking','rateDriver','topup','driverRegister','editProfile','cityToCity','freight',
+  'settingsTariffs','settingsRideReq','settingsNav','settingsLocations','settingsMapAccess','settingsNotif'];
+
+function render(){
+  const root = document.getElementById('root');
+  try{
+    const fn = screens[State.screen] || screenHome;
+    let html = fn();
+    const showNav = State.authed && !noNavScreens.includes(State.screen);
+    if(showNav) html += BottomNav();
+    root.innerHTML = html;
+  }catch(e){
+    console.error('Render error:', e);
+    root.innerHTML = `<div style="padding:40px 24px; text-align:center; font-family:sans-serif;">
+      <h2 style="color:#D14B4B;">Kuch masla ho gaya</h2>
+      <p style="color:#6B7570; font-size:14px;">Screen load nahi ho saki. Neeche button se wapas Home par jaayein.</p>
+      <button onclick="State.screen='home'; State.authed=true; render()" style="margin-top:16px; padding:12px 20px; border:none; border-radius:10px; background:#12805C; color:#fff; font-weight:700; cursor:pointer;">Home Par Jaayein</button>
+    </div>`;
+    return;
+  }
+  if(State.screen==='home' && State.mode==='passenger') initMap('mapHome');
+  if(State.screen==='home' && State.mode==='driver' && State.driver.registered) initMap('mapDriverHome');
+  if(State.screen==='rideTracking') initMap('mapTracking', 30.1650, 71.5299, 14);
+}
+render();
+</script>
+</body>
+</html>
